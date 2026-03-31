@@ -1,0 +1,21 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: sk054-hbm-api
+    ports:
+      - "8001:8000"
+    networks:
+      - public
+  frontend:
+    build: ./frontend
+    container_name: sk054-hbm-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - public
+networks:
+  public:

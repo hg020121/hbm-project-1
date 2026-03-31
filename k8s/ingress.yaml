@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sk054-hbm-ingress
+  namespace: class-2
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: public-nginx
+  rules:
+    - host: sk054-hbm.skala25a.project.skala-ai.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: sk054-hbm-api-svc
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sk054-hbm-frontend-svc
+                port:
+                  number: 80

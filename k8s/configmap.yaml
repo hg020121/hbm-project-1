@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sk054-hbm-config
+  namespace: class-2
+data:
+  DB_HOST: "sk054-mysql-svc"
+  DB_PORT: "3306"
+  DB_USER: "root"
+  DB_NAME: "hbm_integrated_db"
+  CHAT_MODEL: "gpt-4o"
+  EMBED_MODEL: "text-embedding-3-small"
+  FAISS_DIR: "faiss_store"
+  CHUNK_SIZE: "900"
+  CHUNK_OVERLAP: "150"

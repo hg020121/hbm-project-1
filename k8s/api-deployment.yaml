@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sk054-hbm-api
+  namespace: class-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sk054-hbm-api
+  template:
+    metadata:
+      labels:
+        app: sk054-hbm-api
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - until nc -z sk054-mysql-svc 3306; do echo "waiting for mysql..."; sleep 3; done
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+      containers:
+        - name: hbm-api
+          image: amdp-registry.skala-ai.com/skala25a/sk054-hbm-api:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: sk054-hbm-config
+            - secretRef:
+                name: sk054-hbm-secret
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: faiss-storage
+              mountPath: /app/faiss_store
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: faiss-storage
+          persistentVolumeClaim:
+            claimName: sk054-faiss-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sk054-hbm-api-svc
+  namespace: class-2
+spec:
+  selector:
+    app: sk054-hbm-api
+  ports:
+    - port: 8000
+      targetPort: 8000

@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sk054-mysql
+  namespace: class-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sk054-mysql
+  template:
+    metadata:
+      labels:
+        app: sk054-mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sk054-hbm-secret
+                  key: DB_PASS
+            - name: MYSQL_DATABASE
+              value: "hbm_integrated_db"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: sk054-mysql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sk054-mysql-svc
+  namespace: class-2
+spec:
+  selector:
+    app: sk054-mysql
+  ports:
+    - port: 3306
+      targetPort: 3306
