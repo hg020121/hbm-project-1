@@ -76,9 +76,12 @@ jobs:
 
       - name: Deploy to EKS
         run: |
+          kubectl scale deployment/sk054-hbm-api --replicas=0 -n ${K8S_NAMESPACE}
+          sleep 10
           kubectl set image deployment/sk054-hbm-api \
             hbm-api=${FULL_IMAGE} \
             -n ${K8S_NAMESPACE}
+          kubectl scale deployment/sk054-hbm-api --replicas=1 -n ${K8S_NAMESPACE}
           kubectl rollout status deployment/sk054-hbm-api \
             -n ${K8S_NAMESPACE} --timeout=300s
 
